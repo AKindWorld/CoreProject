@@ -3,6 +3,8 @@
     import anime from "animejs";
     import { onMount, beforeUpdate } from "svelte";
 
+    import type { VideoPlayerElement } from "@vidstack/player";
+
     import { browser } from "$app/env";
     import { page } from "$app/stores";
 
@@ -16,7 +18,7 @@
     $: episode_number = parseInt($page.params.number);
     $: anime_name = snakeCaseToTitleCase($page.params.anime_name);
 
-    let player: HTMLVmPlayerElement;
+    let videoPlayer: VideoPlayerElement;
     let showPlayer = false;
     let captionEnabled = true;
 
@@ -28,20 +30,21 @@
     });
 
     onMount(async () => {
-        const { defineCustomElements } = await import("@vime/core");
-        defineCustomElements();
+        await import("@vidstack/player/define/vds-video-player.js");
+        await import("@vidstack/player/define/vds-play-button.js");
+
         showPlayer = true;
     });
 
     const onVolumeChange = async () => {
-        $vimeJSVolume = player?.volume;
+        // $vimeJSVolume = player?.volume;
     };
 
     // First book for player
     $: {
-        if (player) {
-            player.volume = $vimeJSVolume;
-        }
+        // if (player) {
+        //     player.volume = $vimeJSVolume;
+        // }
     }
 
     const handleKeydown = async (event: KeyboardEvent) => {
@@ -56,47 +59,46 @@
 				* F				= 	Enter / Exit FullScreen
 		
 		*/
-
-        switch (event?.key?.toLowerCase()) {
-            case " ":
-            case "k": {
-                player?.paused ? player?.play() : player?.pause();
-                break;
-            }
-            case "m": {
-                player?.muted
-                    ? player?.removeAttribute("muted")
-                    : player?.setAttribute("muted", "");
-                break;
-            }
-            case "c": {
-                switch (captionEnabled) {
-                    case true: {
-                        await player?.setTextTrackVisibility(false);
-                        captionEnabled = false;
-                        break;
-                    }
-                    case false: {
-                        await player?.setTextTrackVisibility(true);
-                        captionEnabled = true;
-                        break;
-                    }
-                }
-                break;
-            }
-            case "arrowright": {
-                player.currentTime += 5;
-                break;
-            }
-            case "arrowleft": {
-                player.currentTime -= 5;
-                break;
-            }
-            case "f": {
-                player?.isFullscreenActive ? player?.exitFullscreen() : player?.enterFullscreen();
-                break;
-            }
-        }
+        // switch (event?.key?.toLowerCase()) {
+        //     case " ":
+        //     case "k": {
+        //         player?.paused ? player?.play() : player?.pause();
+        //         break;
+        //     }
+        //     case "m": {
+        //         player?.muted
+        //             ? player?.removeAttribute("muted")
+        //             : player?.setAttribute("muted", "");
+        //         break;
+        //     }
+        //     case "c": {
+        //         switch (captionEnabled) {
+        //             case true: {
+        //                 await player?.setTextTrackVisibility(false);
+        //                 captionEnabled = false;
+        //                 break;
+        //             }
+        //             case false: {
+        //                 await player?.setTextTrackVisibility(true);
+        //                 captionEnabled = true;
+        //                 break;
+        //             }
+        //         }
+        //         break;
+        //     }
+        //     case "arrowright": {
+        //         player.currentTime += 5;
+        //         break;
+        //     }
+        //     case "arrowleft": {
+        //         player.currentTime -= 5;
+        //         break;
+        //     }
+        //     case "f": {
+        //         player?.isFullscreenActive ? player?.exitFullscreen() : player?.enterFullscreen();
+        //         break;
+        //     }
+        // }
     };
     let showMore = false;
     let chevronOne: HTMLElement;
@@ -171,28 +173,19 @@
 
 <div class="container pt-5">
     {#if showPlayer}
-        <vm-player autoplay bind:this={player} on:vmVolumeChange={onVolumeChange}>
-            <vm-video poster="https://media.vimejs.com/poster.png" cross-origin>
-                <source data-src="https://media.vimejs.com/720p.mp4" type="video/mp4" />
-                <track
-                    default
-                    kind="subtitles"
-                    src="https://media.vimejs.com/subs/english.vtt"
-                    srclang="en"
-                    label="English"
-                />
-            </vm-video>
-            <vm-ui>
-                <vm-click-to-play />
-                <vm-dbl-click-fullscreen />
-                <vm-captions />
-                <vm-poster />
-                <vm-spinner />
-                <vm-loading-screen />
-                <vm-default-controls />
-                <vm-default-settings pin="bottomRight" />
-            </vm-ui>
-        </vm-player>
+        <vds-video-player
+            controls
+            width="1280"
+            height="720"
+            loading="lazy"
+            src="https://media-files.vidstack.io/720p.mp4"
+            poster="https://media-files.vidstack.io/poster.png"
+            bind:this={videoPlayer}
+        >
+            <vds-media-ui>
+                <vds-play-button />
+            </vds-media-ui>
+        </vds-video-player>
     {:else}
         <section class="hero is-large">
             <div class="hero-body">
